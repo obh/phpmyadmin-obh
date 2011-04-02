@@ -94,6 +94,13 @@ if (! $db_is_information_schema) {
         $tab_privileges['icon'] = 's_rights.png';
     }
 }
+$tab_procedure['link']= 'db_procedure.php';
+$tab_procedure['text']= __('Procedure');
+$tab_procedure['icon']= 's_rights.png';
+
+$tab_event['link']= 'db_events.php';
+$tab_event['text']= __('Events');
+$tab_event['icon']= 's_rights.png';
 
 /**
  * Displays tab links
@@ -104,6 +111,8 @@ $tabs[] =& $tab_sql;
 $tabs[] =& $tab_search;
 $tabs[] =& $tab_qbe;
 $tabs[] =& $tab_export;
+$tabs[] =& $tab_procedure;
+$tabs[] =& $tab_event;
 if (! $db_is_information_schema) {
     $tabs[] =& $tab_import;
     $tabs[] =& $tab_operation;

@@ -174,8 +174,12 @@ $(document).ready(function() {
             /**
              * @var $form    stores reference to current form
              */
-            var $form = $(this).find("#addUsersForm");
+<<<<<<< Updated upstream
+            var $form = $(this).find("form[name=usersForm]").last();
 
+=======
+            var $form = $(this).find("#addUsersForm");            
+>>>>>>> Stashed changes
             if( ! checkAddUser($form.get(0)) ) {
                 PMA_ajaxShowMessage(PMA_messages['strFormEmpty']);
                 return false;
@@ -211,7 +215,7 @@ $(document).ready(function() {
             .prepend(data)
             .find("#fieldset_add_user_footer").hide() //showing the "Go" and "Create User" buttons together will confuse the user
             .end()
-            .find("#addUsersForm").append('<input type="hidden" name="ajax_request" value="true" />')
+            .find("form[name=usersForm]").append('<input type="hidden" name="ajax_request" value="true" />')
             .end()
             .dialog({
                 title: PMA_messages['strAddNewUser'],

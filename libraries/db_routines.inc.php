@@ -18,7 +18,7 @@ if (! defined('PHPMYADMIN')) {
     exit;
 }
 
-$routines = PMA_DBI_fetch_result('SELECT SPECIFIC_NAME,ROUTINE_NAME,ROUTINE_TYPE,DTD_IDENTIFIER FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA= \'' . PMA_sqlAddslashes($db,true) . '\';');
+$routines = PMA_DBI_fetch_result('SELECT SPECIFIC_NAME,ROUTINE_NAME,ROUTINE_TYPE,DTD_IDENTIFIER,CREATED,ROUTINE_COMMENT,LAST_ALTERED FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA= \'' . PMA_sqlAddslashes($db,true) . '\';');
 
 if ($routines) {
     PMA_generate_slider_effect('routines', __('Routines'));
@@ -29,12 +29,18 @@ if ($routines) {
                       <th>%s</th>
                       <th>&nbsp;</th>
                       <th>&nbsp;</th>
+                      <th>&nbsp;</th>
+                      <th>&nbsp;</th>
+                      <th>%s</th>
+                      <th>%s</th>
                       <th>%s</th>
                       <th>%s</th>
                 </tr>',
           __('Name'),
           __('Type'),
-          __('Return type'));
+          __('Return type'),
+          __('Created'),
+          __('Last Modified'));
     $ct=0;
     $delimiter = '//';
     if ($GLOBALS['cfg']['AjaxEnable']) {
@@ -42,7 +48,8 @@ if ($routines) {
     } else {
         $conditional_class = '';
     }
-
+   
+   // echo $_REQUEST['server'];
     foreach ($routines as $routine) {
 
         // information_schema (at least in MySQL 5.0.45)
@@ -53,6 +60,12 @@ if ($routines) {
         $definition = 'DROP ' . $routine['ROUTINE_TYPE'] . ' ' . PMA_backquote($routine['SPECIFIC_NAME']) . $delimiter . "\n"
             .  PMA_DBI_get_definition($db, $routine['ROUTINE_TYPE'], $routine['SPECIFIC_NAME'])
             . "\n";
+        // use SHOW CREATE PROCEDURE for this purpose rather than using this...
+        $exec = PMA_DBI_fetch_result("SELECT proc.param_list  FROM  mysql.proc WHERE proc.name='" . $routine['SPECIFIC_NAME'] . "' AND proc.db = '" . PMA_sqlAddslashes($db,true) . "' ;");
+        foreach ($exec as $obh) {
+            $exec_call = 'CALL ' . $routine['SPECIFIC_NAME'] . '('. $obh . ')';
+        }
+// $exec= PMA_DBI_get_definition($db, $routine['ROUTINE_TYPE'], $routine['SPECIFIC_NAME']);
 
         //if ($routine['ROUTINE_TYPE'] == 'PROCEDURE') {
         //    $sqlUseProc  = 'CALL ' . $routine['SPECIFIC_NAME'] . '()';
@@ -72,7 +85,10 @@ if ($routines) {
         }
 
         echo sprintf('<tr class="%s">
-                          <td><input type="hidden" class="drop_procedure_sql" value="%s" /><strong>%s</strong></td>
+                          <td><input type="hidden" class="drop_procedure_sql" value="%s" /><strong>%s<span class="tblcomment">%s</span></strong></td>
+                          <td>%s</td>
+                          <td>%s</td>
+                          <td>%s</td>
                           <td>%s</td>
                           <td>%s</td>
                           <td>%s</td>
@@ -81,14 +97,20 @@ if ($routines) {
                      ($ct%2 == 0) ? 'even' : 'odd',
                      $sqlDropProc,
                      $routine['ROUTINE_NAME'],
-                     ! empty($definition) ? PMA_linkOrButton('db_sql.php?' . $url_query . '&amp;sql_query=' . urlencode($definition) . '&amp;show_query=1&amp;db_query_force=1&amp;delimiter=' . urlencode($delimiter), $titles['Edit']) : '&nbsp;',
+                     $routine['ROUTINE_COMMENT'],
+                     ! empty($definition) ? PMA_linkOrButton('db_mysql.php?' . $url_query . '&amp;routine_name='.$routine['ROUTINE_NAME'].'&amp;sql_query=' . urlencode($definition) . '&amp;show_query=1&amp;db_query_force=1&amp;delimiter=' . urlencode($delimiter), $titles['Edit']) : '&nbsp;',
                      '<a ' . $conditional_class . ' href="sql.php?' . $url_query . '&amp;sql_query=' . urlencode($sqlDropProc) . '" >' . $titles['Drop'] . '</a>',
+                     ! empty($definition) ? PMA_linkOrButton('db_proc_execute.php?' . $url_query . '&amp;routine_name='.$routine['ROUTINE_NAME'].'&amp;sql_query=' . urlencode($exec_call)  . '&amp;show_query=1&amp;db_query_force=1&amp;delimiter=' . urlencode($delimiter), $titles['Execute']) : '&nbsp;',
+                     ! empty($definition) ? PMA_linkOrButton('db_proc_export.php?' . $url_query . '&amp;routine_name='.$routine['ROUTINE_NAME'], $titles['Export']) : '&nbsp;',
+                   //  'empty for now',
                      $routine['ROUTINE_TYPE'],
-                     $routine['DTD_IDENTIFIER']);
+                     $routine['DTD_IDENTIFIER'],
+                     $routine['CREATED'],
+                     $routine['LAST_ALTERED']);
         $ct++;
     }
     echo '</table>';
-    echo '</fieldset>' . "\n";
+    echo '</fieldset>' ."\n";
     echo '</div>' . "\n";
 }
 ?>

@@ -1177,7 +1177,7 @@ $cfg['Export']['file_template_database'] = '@DATABASE@';
  * @global string $cfg['Export']['file_template_server']
  */
 $cfg['Export']['file_template_server'] = '@SERVER@';
-
+$cfg['Export']['file_template_procedure'] = '@PROCEDURE@';
 /**
  *
  *

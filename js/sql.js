@@ -18,6 +18,10 @@ function PMA_urldecode(str) {
     return decodeURIComponent(str.replace(/\+/g, '%20'));
 }
 
+function PMA_urlencode(str) {
+    return encodeURIComponent(str.replace(/\%20/g, '+'));
+}
+
 /**
  * Get the field name for the current field.  Required to construct the query
  * for inline editing
@@ -677,7 +681,6 @@ $(document).ready(function() {
                         'token' : window.parent.token,
                         'curr_value' : curr_value
                 }
-
                 $.post('sql.php', post_params, function(data) {
                     $this_field.append(data.dropdown);
                     $this_field.data('original_data', data_value);
@@ -785,6 +788,9 @@ $(document).ready(function() {
         var sql_query = 'UPDATE `' + window.parent.table + '` SET ';
 
         var need_to_post = false;
+        
+        var new_clause='';
+        var prev_index=-1;
 
         $input_siblings.each(function() {
             /** @lends jQuery */
@@ -843,6 +849,9 @@ $(document).ready(function() {
                         $.extend(relation_fields, this_field_params);
                     }
                 }
+                    if(where_clause.indexOf(field_name) > prev_index){
+                        new_clause += '`'+window.parent.table+'`.'+'`' + field_name + "` = '"+this_field_params[field_name].replace(/'/g,"''")+"'"+' AND ';
+                    }
                 if (this_field_params[field_name] != $this_field.data('original_data')) {
                     sql_query += ' `' + field_name + "`='" + this_field_params[field_name].replace(/'/g, "''") + "' , ";
                     need_to_post = true;
@@ -850,10 +859,15 @@ $(document).ready(function() {
             }
         })
 
+        /*  
+         * update the where_clause, remove the last appended ' AND '
+         * */
+
         //Remove the last ',' appended in the above loop
         sql_query = sql_query.replace(/,\s$/, '');
+        new_clause=new_clause.substring(0,new_clause.length-5);
+        new_clause=PMA_urlencode(new_clause);
         sql_query += ' WHERE ' + PMA_urldecode(where_clause);
-
         /**
          * @var rel_fields_list  String, url encoded representation of {@link relations_fields}
          */
@@ -891,6 +905,12 @@ $(document).ready(function() {
             $.post('tbl_replace.php', post_params, function(data) {
                 if(data.success == true) {
                     PMA_ajaxShowMessage(data.message);
+                    if(disp_mode == 'vertical') {
+                        $this_td.parents('tbody').find('tr').find('.where_clause:nth('+this_td_index+')').attr('value',new_clause);
+                    }
+                    else {
+                        $this_td.parent('tr').find('.where_clause').attr('value',new_clause);
+                    }
                     // remove possible previous feedback message
                     $('#result_query').remove();
                     if (typeof data.result_query != 'undefined') {

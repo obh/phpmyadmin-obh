@@ -190,6 +190,12 @@ if (! isset($sql_backquotes)) {
  * @return  bool        Whether it suceeded
  */
 function PMA_exportRoutines($db) {
+    //OBH added $procedure_list and $num_args
+    $num_args=func_num_args();
+    if($num_args>1){
+        $procedure_list=array();
+        $procedure_list=func_get_arg(1);
+    }
     global $crlf;
 
     $text = '';
@@ -210,6 +216,9 @@ function PMA_exportRoutines($db) {
           . PMA_exportComment();
 
         foreach($procedure_names as $procedure_name) {
+            if(!empty($procedure_list) && !in_array($procedure_name,$procedure_list) ){
+                continue;
+            }
             if (! empty($GLOBALS['sql_drop_table'])) {
                 $text .= 'DROP PROCEDURE IF EXISTS ' . PMA_backquote($procedure_name) . $delimiter . $crlf;
             }
@@ -953,15 +962,6 @@ function PMA_exportData($db, $table, $crlf, $error_url, $sql_query)
     }
 
     // it's not a VIEW
-    $head = PMA_possibleCRLF()
-          . PMA_exportComment()
-          . PMA_exportComment(__('Dumping data for table') . ' ' . $formatted_table_name)
-          . PMA_exportComment();
-
-    if (! PMA_exportOutputHandler($head)) {
-        return FALSE;
-    }
-
     $buffer = '';
 
     // analyze the query to get the true column names, not the aliases
@@ -977,13 +977,6 @@ function PMA_exportData($db, $table, $crlf, $error_url, $sql_query)
     }
 
     if ($result != FALSE) {
-        // emit a single CRLF before the first data statement (produces
-        // an unintended CRLF when there is no data, but I don't see how it
-        // can be avoided, as we are in UNBUFFERED mode)
-        if (! PMA_exportOutputHandler($crlf)) {
-            return FALSE;
-        }
-
         $fields_cnt     = PMA_DBI_num_fields($result);
 
         // Get field information
@@ -1053,6 +1046,16 @@ function PMA_exportData($db, $table, $crlf, $error_url, $sql_query)
         }
 
         while ($row = PMA_DBI_fetch_row($result)) {
+            if ($current_row == 0) {
+                $head = PMA_possibleCRLF()
+                      . PMA_exportComment()
+                      . PMA_exportComment(__('Dumping data for table') . ' ' . $formatted_table_name)
+                      . PMA_exportComment()
+                      . $crlf;
+                if (! PMA_exportOutputHandler($head)) {
+                    return FALSE;
+                }
+            }
             $current_row++;
             for ($j = 0; $j < $fields_cnt; $j++) {
                 // NULL

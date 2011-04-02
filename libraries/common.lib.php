@@ -3020,6 +3020,8 @@ function PMA_buildActionTitles() {
     $titles['Empty']      = PMA_getIcon('b_empty.png', __('Empty'), true);
     $titles['NoEmpty']    = PMA_getIcon('bd_empty.png', __('Empty'), true);
     $titles['Edit']       = PMA_getIcon('b_edit.png', __('Edit'), true);
+    $titles['Execute']    = PMA_getIcon('b_execute.png', __('Execute'), true);
+    $titles['Export']     = PMA_getIcon('b_insrow.png', __('Export'),true);
     return $titles;
 }
 ?>

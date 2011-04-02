@@ -360,6 +360,7 @@ $goto_whitelist = array(
     //'calendar.php',
     //'changelog.php',
     //'chk_rel.php',
+    'db_procedure.php',
     'db_create.php',
     'db_datadict.php',
     'db_sql.php',

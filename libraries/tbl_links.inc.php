@@ -106,6 +106,10 @@ if ($table_info_num_rows == 0 && !$tbl_is_view) {
     $tabs['browse']['warning'] = __('Table seems to be empty!');
     $tabs['search']['warning'] = __('Table seems to be empty!');
 }
+// check if user has privileges to create a trigger in mysql use information_schema.user_privileges 
+$tabs['triggers']['icon']='b_tblops.png';
+$tabs['triggers']['link']='tbl_triggers.php';
+$tabs['triggers']['text']=__('Triggers');
 
 echo PMA_generate_html_tabs($tabs, $url_params);
 unset($tabs);
